@@ -7737,3 +7737,14 @@ func (s *testIntegrationSerialSuite) TestIssue20608(c *C) {
 	tk := testkit.NewTestKit(c, s.store)
 	tk.MustQuery("select '䇇Հ' collate utf8mb4_bin like '___Հ';").Check(testkit.Rows("0"))
 }
+
+func (s *testIntegrationSuite) TestIssue13157(c *C) {
+	tk := testkit.NewTestKit(c, s.store)
+	tk.MustExec("use test")
+	tk.MustExec("drop table if exists t")
+	tk.MustExec("create table t(col_datetime datetime);")
+	tk.MustExec("insert into t values('1994-02-05 05:41:38');")
+	err := tk.ExecToErr("SELECT (col_datetime <= 'EWJ77aX7t') AS res FROM t;")
+	c.Assert(err, NotNil)
+	c.Assert(err.Error(), Equals, "ERROR 1525 (HY000): Incorrect DATETIME value: 'EWJ77aX7t'")
+}
